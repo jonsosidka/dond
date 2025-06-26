@@ -173,55 +173,171 @@ body {
 /* Phase 2: Game play */
 .game-layout {
     display: grid;
-    grid-template-columns: 250px 1fr 280px;
+    grid-template-columns: 1fr 280px;
     gap: 30px;
     align-items: start;
 }
 
-/* Money board */
+/* Money board - Game Show Style */
 .money-board {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 75%, #000000 100%);
+    border: 4px solid #ffd700;
+    border-radius: 20px;
+    padding: 20px 30px;
+    margin-bottom: 25px;
+    box-shadow: 
+        0 0 30px rgba(255, 215, 0, 0.4),
+        inset 0 2px 10px rgba(255, 215, 0, 0.1),
+        0 15px 50px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.money-board::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700, #ffed4e);
+    background-size: 400% 400%;
+    border-radius: 20px;
+    z-index: -1;
+    animation: goldShimmer 3s ease-in-out infinite;
+}
+
+@keyframes goldShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 
 .money-board h3 {
     margin-bottom: 20px;
     text-align: center;
-    color: #333;
-    font-size: 1.1rem;
+    color: #ffd700;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-shadow: 
+        0 0 10px rgba(255, 215, 0, 0.8),
+        0 0 20px rgba(255, 215, 0, 0.6),
+        2px 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 2px;
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    from { 
+        text-shadow: 
+            0 0 10px rgba(255, 215, 0, 0.8),
+            0 0 20px rgba(255, 215, 0, 0.6),
+            2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    to { 
+        text-shadow: 
+            0 0 20px rgba(255, 215, 0, 1),
+            0 0 30px rgba(255, 215, 0, 0.8),
+            0 0 40px rgba(255, 215, 0, 0.6),
+            2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
 }
 
 .money-grid {
     display: grid;
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    max-width: 100%;
 }
 
 .money-item {
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    padding: 12px 8px;
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    border: 2px solid #3498db;
+    border-radius: 12px;
     text-align: center;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #ecf0f1;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+}
+
+.money-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+}
+
+.money-item:hover::before {
+    left: 100%;
 }
 
 .money-item.high-value {
-    background: linear-gradient(145deg, #d4edda, #c3e6cb);
-    border-color: #28a745;
-    color: #155724;
+    background: linear-gradient(145deg, #8e44ad, #9b59b6);
+    border-color: #e74c3c;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 800;
+    box-shadow: 
+        0 0 15px rgba(231, 76, 60, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 3px rgba(255, 255, 255, 0.2);
 }
 
 .money-item.removed {
-    background: #f8d7da;
-    border-color: #dc3545;
-    color: #721c24;
-    opacity: 0.6;
+    background: linear-gradient(145deg, #7f8c8d, #95a5a6);
+    border-color: #bdc3c7;
+    color: #2c3e50;
+    opacity: 0.4;
     text-decoration: line-through;
+    transform: scale(0.9);
+    box-shadow: 
+        inset 0 0 10px rgba(0, 0, 0, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.money-item.highlighted {
+    animation: moneyHighlight 1s ease-out;
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+@keyframes moneyHighlight {
+    0% {
+        background: linear-gradient(145deg, #2c3e50, #34495e);
+        box-shadow: 
+            0 4px 8px rgba(0, 0, 0, 0.3),
+            inset 0 1px 3px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        background: linear-gradient(145deg, #f39c12, #e67e22);
+        box-shadow: 
+            0 0 25px rgba(243, 156, 18, 0.8),
+            0 0 50px rgba(243, 156, 18, 0.4),
+            0 8px 16px rgba(0, 0, 0, 0.4);
+        border-color: #ffd700;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    }
+    100% {
+        background: linear-gradient(145deg, #7f8c8d, #95a5a6);
+        border-color: #bdc3c7;
+        color: #2c3e50;
+        box-shadow: 
+            inset 0 0 10px rgba(0, 0, 0, 0.5),
+            0 2px 4px rgba(0, 0, 0, 0.2);
+    }
 }
 
 /* Briefcases area */
@@ -974,7 +1090,7 @@ body {
 /* Responsive design */
 @media (max-width: 1200px) {
     .game-layout {
-        grid-template-columns: 200px 1fr 250px;
+        grid-template-columns: 1fr 250px;
         gap: 20px;
     }
 }
@@ -983,10 +1099,6 @@ body {
     .game-layout {
         grid-template-columns: 1fr;
         gap: 20px;
-    }
-    
-    .money-board {
-        order: 3;
     }
     
     .briefcases-area {
@@ -998,7 +1110,23 @@ body {
     }
     
     .money-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 8px;
+    }
+    
+    .money-board {
+        padding: 15px 20px;
+        margin-bottom: 20px;
+    }
+    
+    .money-board h3 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+    }
+    
+    .money-item {
+        padding: 8px 6px;
+        font-size: 0.9rem;
     }
 }
 
@@ -1020,6 +1148,29 @@ body {
     
     .container {
         padding: 10px;
+    }
+    
+    /* Mobile money board adjustments */
+    .money-board {
+        padding: 12px 15px;
+        margin-bottom: 15px;
+    }
+    
+    .money-board h3 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+    }
+    
+    .money-grid {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 6px;
+    }
+    
+    .money-item {
+        padding: 6px 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
     }
     
     /* Mobile adjustments for game summary */

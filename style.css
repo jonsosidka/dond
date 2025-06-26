@@ -404,6 +404,71 @@ body {
     gap: 15px;
 }
 
+/* Final Two Switch Interface */
+.final-two-briefcases {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+}
+
+.final-briefcase {
+    text-align: center;
+    flex: 1;
+}
+
+.final-briefcase h4 {
+    margin-bottom: 10px;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.final-briefcase .briefcase {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.switch-vs {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #667eea;
+    margin: 0 20px;
+    text-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.switch-message {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.switch-message p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+.btn-switch {
+    background: linear-gradient(45deg, #17a2b8, #20c997);
+    color: white;
+}
+
+.btn-stick {
+    background: linear-gradient(45deg, #6f42c1, #6610f2);
+    color: white;
+}
+
 /* Offer History */
 .offer-history {
     background: rgba(255, 255, 255, 0.95);

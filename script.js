@@ -205,6 +205,7 @@ class DealOrNoDealGame {
         // Update counters immediately when briefcase is clicked
         briefcase.opened = true;
         this.openedThisRound++;
+        
         this.updateInstructions(); // This updates the round progress counter
         
         // DRAMATIC BRIEFCASE OPENING SEQUENCE! 🎭
@@ -337,6 +338,13 @@ class DealOrNoDealGame {
             return;
         }
         
+        // Check for "final two" scenario - only one briefcase left besides player's
+        if (remainingBriefcases === 1) {
+            this.hideRoundProgress();
+            this.finalTwoSwitch();
+            return;
+        }
+        
         if (this.currentRoundIndex < this.briefcasesToOpen.length) {
             this.hideRoundProgress(); // Hide during banker offer
             this.showBankerOffer();
@@ -345,6 +353,88 @@ class DealOrNoDealGame {
             this.hideRoundProgress();
             this.endGame('final');
         }
+    }
+    
+    finalTwoSwitch() {
+        const lastBriefcase = this.briefcases.find(b => !b.opened && !b.selected);
+        
+        this.showCountdown(['Final Two!', 'Switch or Stick?'], () => {
+            this.showFinalTwoOffer(lastBriefcase);
+        }, 'Only two briefcases remain! Yours and one other...');
+    }
+    
+    showFinalTwoOffer(lastBriefcase) {
+        // Create the final two interface
+        const bankerArea = document.getElementById('banker-area');
+        bankerArea.classList.add('show');
+        bankerArea.classList.add('banker-entrance');
+        
+        // Replace banker content with switch offer
+        const bankerCard = bankerArea.querySelector('.banker-card');
+        bankerCard.innerHTML = `
+            <h3>🔄 FINAL TWO DECISION!</h3>
+            <div class="final-two-briefcases">
+                <div class="final-briefcase">
+                    <h4>Your Briefcase</h4>
+                    <div class="briefcase selected">${this.selectedBriefcase}</div>
+                </div>
+                <div class="switch-vs">VS</div>
+                <div class="final-briefcase">
+                    <h4>Last Briefcase</h4>
+                    <div class="briefcase">${lastBriefcase.id}</div>
+                </div>
+            </div>
+            <div class="switch-message">
+                <p>Do you want to <strong>SWITCH</strong> your briefcase with briefcase #${lastBriefcase.id}, or <strong>STICK</strong> with your original choice?</p>
+            </div>
+            <div class="banker-buttons">
+                <button class="btn btn-switch" id="switch-btn">SWITCH!</button>
+                <button class="btn btn-stick" id="stick-btn">STICK!</button>
+            </div>
+        `;
+        
+        // Add event listeners for switch decision
+        document.getElementById('switch-btn').addEventListener('click', () => this.makeSwitch(lastBriefcase));
+        document.getElementById('stick-btn').addEventListener('click', () => this.stickWithOriginal());
+        
+        // Add dramatic button effects
+        setTimeout(() => {
+            document.getElementById('switch-btn').classList.add('deal-button-emphasis');
+            document.getElementById('stick-btn').classList.add('no-deal-button-emphasis');
+        }, 1000);
+        
+        soundEffects.playDrama();
+    }
+    
+    makeSwitch(lastBriefcase) {
+        this.showCountdown(['SWITCH!', 'Briefcases', 'Swapped!'], () => {
+            // Swap the briefcases
+            const originalBriefcase = this.briefcases.find(b => b.id === this.selectedBriefcase);
+            this.selectedBriefcase = lastBriefcase.id;
+            
+            // Update visual indicators
+            const playerBriefcase = document.getElementById('player-briefcase');
+            playerBriefcase.textContent = this.selectedBriefcase;
+            
+            // Mark the last briefcase as selected and original as not selected
+            lastBriefcase.selected = true;
+            originalBriefcase.selected = false;
+            
+            soundEffects.playSuccess();
+            this.shakeScreen();
+            
+            document.getElementById('banker-area').classList.remove('show');
+            this.endGame('final');
+        }, 'You chose to switch briefcases!');
+    }
+    
+    stickWithOriginal() {
+        this.showCountdown(['STICK!', 'Original', 'Choice!'], () => {
+            soundEffects.playReveal();
+            
+            document.getElementById('banker-area').classList.remove('show');
+            this.endGame('final');
+        }, 'You chose to stick with your original briefcase!');
     }
     
     showBankerOffer() {
@@ -493,7 +583,7 @@ class DealOrNoDealGame {
             this.enableBriefcases();
             this.resetRoundProgress(); // Reset for new round
             this.showRoundProgress(); // Show the counter again
-            this.updateInstructions();
+            this.updateInstructions(); // Update instructions and round progress
             this.updateStats();
         }, 'You rejected the offer! Continue playing!');
     }
@@ -539,22 +629,66 @@ class DealOrNoDealGame {
     dramaticDealConclusion(finalAmount) {
         const actualAmount = this.briefcases.find(b => b.id === this.selectedBriefcase).amount;
         
-        // Show what was in their briefcase with drama
-        this.showCountdown(['Your Briefcase', 'Contained...'], () => {
-            this.activateSpotlight();
-            
-            // Reveal their briefcase amount
-            const playerBriefcase = document.getElementById('player-briefcase');
-            playerBriefcase.innerHTML = `<span class="money-reveal">${this.formatMoney(actualAmount)}</span>`;
-            playerBriefcase.classList.add('briefcase-opening');
-            
-            soundEffects.playReveal();
-            
+        // First reveal all remaining briefcases
+        this.showCountdown(['Let\'s see what', 'you left behind!'], () => {
+            this.revealAllRemainingCases(() => {
+                // Then show what was in their briefcase
+                this.showCountdown(['Your Briefcase', 'Contained...'], () => {
+                    this.activateSpotlight();
+                    
+                    // Reveal their briefcase amount
+                    const playerBriefcase = document.getElementById('player-briefcase');
+                    playerBriefcase.innerHTML = `<span class="money-reveal">${this.formatMoney(actualAmount)}</span>`;
+                    playerBriefcase.classList.add('briefcase-opening');
+                    
+                    soundEffects.playReveal();
+                    
+                    setTimeout(() => {
+                        this.deactivateSpotlight();
+                        this.completeGameEnd('deal', finalAmount, actualAmount);
+                    }, 2000);
+                }, 'Now let\'s see what you could have won!');
+            });
+        }, 'Time to reveal the remaining briefcases!');
+    }
+    
+    revealAllRemainingCases(callback) {
+        const remainingBriefcases = this.briefcases.filter(b => !b.opened && !b.selected);
+        
+        if (remainingBriefcases.length === 0) {
+            callback();
+            return;
+        }
+        
+        soundEffects.playTension();
+        
+        // Reveal each briefcase with staggered timing
+        remainingBriefcases.forEach((briefcase, index) => {
             setTimeout(() => {
-                this.deactivateSpotlight();
-                this.completeGameEnd('deal', finalAmount, actualAmount);
-            }, 2000);
-        }, 'Let\'s see what you could have won!');
+                // Find the briefcase element
+                const briefcaseEl = document.querySelector(`#briefcases-play .briefcase:nth-child(${this.getAvailableBriefcaseIndex(briefcase.id)})`);
+                if (briefcaseEl && !briefcaseEl.classList.contains('opened')) {
+                    briefcaseEl.classList.add('opened', 'briefcase-opening');
+                    briefcaseEl.innerHTML = `<span class="money-reveal">${this.formatMoney(briefcase.amount)}</span>`;
+                    
+                    // Mark as opened in game state
+                    briefcase.opened = true;
+                    
+                    soundEffects.playClick();
+                    
+                    // Highlight on money board
+                    this.highlightMoneyOnBoard(briefcase.amount);
+                }
+                
+                // Call callback after last briefcase
+                if (index === remainingBriefcases.length - 1) {
+                    setTimeout(() => {
+                        this.renderMoneyBoard();
+                        callback();
+                    }, 1000);
+                }
+            }, index * 300);
+        });
     }
     
     completeGameEnd(type, finalAmount, actualAmount = null) {
@@ -773,10 +907,13 @@ class DealOrNoDealGame {
         }
         
         const remaining = this.briefcasesToOpen[this.currentRoundIndex] - this.openedThisRound;
+        
+        // Update the to-open span content
         toOpenEl.textContent = remaining;
         
-        const instruction = remaining === 1 ? 'Open 1 briefcase' : `Open ${remaining} briefcases`;
-        instructionEl.innerHTML = instruction;
+        // Update the instruction text while preserving the to-open span structure
+        const briefcaseText = remaining === 1 ? 'briefcase' : 'briefcases';
+        instructionEl.innerHTML = `Open <span id="to-open">${remaining}</span> ${briefcaseText}`;
         
         // Update round progress counter
         this.updateRoundProgress();
@@ -787,11 +924,20 @@ class DealOrNoDealGame {
         const progressFillEl = document.getElementById('progress-fill');
         const roundProgressEl = document.getElementById('round-progress');
         
-        if (!casesLeftCounterEl || !progressFillEl || !roundProgressEl) return;
+        if (!casesLeftCounterEl || !progressFillEl || !roundProgressEl) {
+            console.log('Round progress elements missing');
+            return;
+        }
+        
+        // Make sure we have valid round data
+        if (this.currentRoundIndex >= this.briefcasesToOpen.length) {
+            console.log('Invalid round index');
+            return;
+        }
         
         const totalThisRound = this.briefcasesToOpen[this.currentRoundIndex];
-        const remaining = totalThisRound - this.openedThisRound;
-        const progressPercent = (this.openedThisRound / totalThisRound) * 100;
+        const remaining = Math.max(0, totalThisRound - this.openedThisRound);
+        const progressPercent = Math.min(100, (this.openedThisRound / totalThisRound) * 100);
         
         // Update counter with animation
         casesLeftCounterEl.textContent = remaining;
@@ -814,7 +960,8 @@ class DealOrNoDealGame {
         const roundProgressEl = document.getElementById('round-progress');
         if (roundProgressEl) {
             roundProgressEl.style.display = 'block';
-            this.updateRoundProgress();
+            // Don't call updateRoundProgress() here since it gets called by updateInstructions()
+            // this.updateRoundProgress();
         }
     }
     
@@ -994,7 +1141,20 @@ class DealOrNoDealGame {
         this.currentGameNumber = this.winningsHistory.length + 1; // Update game number
         
         // Hide banker area and reset history
-        document.getElementById('banker-area').classList.remove('show');
+        const bankerArea = document.getElementById('banker-area');
+        bankerArea.classList.remove('show');
+        
+        // Restore original banker card HTML
+        const bankerCard = bankerArea.querySelector('.banker-card');
+        bankerCard.innerHTML = `
+            <h3>📞 Banker's Offer</h3>
+            <div class="offer-amount" id="offer-amount">$0</div>
+            <div class="banker-buttons">
+                <button class="btn btn-deal" id="deal-btn">DEAL!</button>
+                <button class="btn btn-no-deal" id="no-deal-btn">NO DEAL!</button>
+            </div>
+        `;
+        
         document.getElementById('offer-history').style.display = 'none';
         
         // Restart the game
